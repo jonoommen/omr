@@ -438,6 +438,7 @@ public:
 #if defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC)
 	enum ScavengerScanOrdering {
 		OMR_GC_SCAVENGER_SCANORDERING_BREADTH_FIRST = 0,
+		OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST,
 		OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL,
 	};
 	ScavengerScanOrdering scavengerScanOrdering; /**< scan ordering in Scavenger */
