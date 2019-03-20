@@ -150,6 +150,8 @@ public:
 
 	uintptr_t approxScanCacheCount; /**< Local copy of approximate entries in global Cache Scan List. Updated upon allocation of new cache. */
 
+	uintptr_t _depthCount;
+	
 	MM_Validator *_activeValidator; /**< Used to identify and report crashes inside Validators */
 
 	MM_MarkStats _markStats;
@@ -647,6 +649,7 @@ public:
 		,_freeEntrySizeClassStats()
 		,_oolTraceAllocationBytes(0)
 		,approxScanCacheCount(0)
+		,_depthCount(0)
 		,_activeValidator(NULL)
 		,_lastSyncPointReached(NULL)
 #if defined(OMR_GC_SEGREGATED_HEAP)
@@ -699,6 +702,7 @@ public:
 		,_freeEntrySizeClassStats()
 		,_oolTraceAllocationBytes(0)
 		,approxScanCacheCount(0)
+		,_depthCount(0)
 		,_activeValidator(NULL)
 		,_lastSyncPointReached(NULL)
 #if defined(OMR_GC_SEGREGATED_HEAP)
