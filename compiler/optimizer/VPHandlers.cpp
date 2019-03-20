@@ -2759,15 +2759,15 @@ TR::Node *constrainIaload(OMR::ValuePropagation *vp, TR::Node *node)
             }
          }
       }
-
+   int32_t frequency = vp->_curBlock->getGlobalNormalizedFrequency(vp->comp()->getFlowGraph());
    TR::VPConstraint * base = vp->getConstraint(node->getFirstChild(), isGlobal);
 
    if (base && base->getClass() && !vp->comp()->getOption(TR_DisableMarkingOfHotFields) &&
       node->getFirstChild()->getOpCode().hasSymbolReference() &&
       node->getFirstChild()->getSymbol()->isCollectedReference() &&
-      vp->_curBlock->getGlobalNormalizedFrequency(vp->comp()->getFlowGraph()) >= TR::Options::_hotFieldThreshold)
+      frequency >= TR::Options::_hotFieldThreshold)
       {
-      vp->comp()->fej9()->markHotField(vp->comp(), node->getSymbolReference(), base->getClass(), base->isFixedClass());
+      vp->comp()->fej9()->markHotField(frequency, vp->comp(), node->getSymbolReference(), base->getClass(), base->isFixedClass());
       }
 
    if (node->getSymbolReference())

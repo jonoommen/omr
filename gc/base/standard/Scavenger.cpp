@@ -248,6 +248,9 @@ MM_Scavenger::initialize(MM_EnvironmentBase *env)
 	case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_BREADTH_FIRST:
 		_cachesPerThread = FLIP_TENURE_LARGE_SCAN;
 		break;
+	case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST:
+		_cachesPerThread = FLIP_TENURE_LARGE_SCAN;
+		break;
 	case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL:
 		/* deferred cache is only needed for hierarchical scanning */
 		_cachesPerThread = FLIP_TENURE_LARGE_SCAN_DEFERRED;
@@ -1538,6 +1541,33 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			scavStats->_flipBytes += objectCopySizeInBytes;
 			scavStats->getFlipHistory(0)->_flipBytes[oldObjectAge + 1] += objectReserveSizeInBytes;
 		}
+		if (_extensions->scavengerScanOrdering == MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST) {
+			UDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);
+			if (hotFieldOffset < UDATA_MAX) {
+				GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
+
+				omrobjectptr_t objectPtr = HotFieldObject.readReferenceFromSlot();							
+				if (NULL != objectPtr && isObjectInEvacuateMemory(objectPtr)) {
+					/* Object needs to be copy and forwarded.  Check if the work has already been done */
+					MM_ForwardedHeader forwardHeaderHotField(objectPtr);
+					if (NULL == forwardHeaderHotField.getForwardedObject()) {
+							copyObject(env, &forwardHeaderHotField);	
+					}
+				}	
+				UDATA hotFieldOffset2 = _extensions->objectModel.getHotFieldOffset2(forwardedHeader);			
+				if (hotFieldOffset2 < UDATA_MAX) {
+					GC_SlotObject HotFieldObject2(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset2));
+					omrobjectptr_t objectPtr2 = HotFieldObject2.readReferenceFromSlot();							
+					if (NULL != objectPtr2 && isObjectInEvacuateMemory(objectPtr2)) {
+						/* Object needs to be copy and forwarded.  Check if the work has already been done */
+						MM_ForwardedHeader forwardHeaderHotField2(objectPtr2);
+						if (NULL == forwardHeaderHotField2.getForwardedObject()) {
+								copyObject(env, &forwardHeaderHotField2);	
+						}
+					}
+				}
+			} 
+		}
 	} else {
 		/* We have not used the reserved space now, but we will for subsequent allocations. If this space was reserved for an individual object,
 		 * we might have created a TLH remainder from previous cache just before reserving this space. This space eventaully can create another remainder.
@@ -2155,6 +2185,9 @@ MM_Scavenger::completeScan(MM_EnvironmentStandard *env)
 
 		switch (_extensions->scavengerScanOrdering) {
 		case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_BREADTH_FIRST:
+			completeScanCache(env, scanCache);
+			break;
+		case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST:
 			completeScanCache(env, scanCache);
 			break;
 		case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL:
