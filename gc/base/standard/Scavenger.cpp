@@ -1299,7 +1299,7 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 	uintptr_t objectCopySizeInBytes, objectReserveSizeInBytes;
 	uintptr_t hotFieldsDescriptor = 0;
 #if defined(J9VM_INTERP_NATIVE_SUPPORT)
-	//uintptr_t hotFieldsAlignment = 0;
+	uintptr_t hotFieldsAlignment = 0;
 	uintptr_t* hotFieldPadBase = NULL;
 	uintptr_t hotFieldPadSize = 0;
 #endif /* defined(J9VM_INTERP_NATIVE_SUPPORT) */
@@ -1345,35 +1345,21 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 		}
 	} else {
 		/* Move straight to tenuring on the object */
-//#if defined(J9VM_INTERP_NATIVE_SUPPORT)
-//
-//		//#define HOTFIELD_SHOULD_ALIGN(descriptor) (0x1 == (0x1 & (descriptor)))
-//
-//		/* adjust the reserved object's size if we are aligning hot fields and this class has a known hot field */
-//
-//		//printf("hotFieldsDescriptor: %zu   ShouldAllign: %d     scavengerAlignHotFields:%d  \n", hotFieldsDescriptor, HOTFIELD_SHOULD_ALIGN(hotFieldsDescriptor), _extensions->scavengerAlignHotFields);
-//
-//		IDATA hotFieldOffset1 = _extensions->objectModel.GetHotFieldOffset(forwardedHeader);
-//
-//		if (_extensions->scavengerAlignHotFields && HOTFIELD_SHOULD_ALIGN(hotFieldsDescriptor)) {
-//
-//			IDATA hotFieldOffset2 = _extensions->objectModel.GetHotFieldOffset(forwardedHeader);
-//			if(hotFieldOffset2 == 5) {
-//				printf("Its really one of my hot fields\n");
-//			}
-//
-//			/* this optimization is a source of fragmentation (alloc request size always assumes maximum padding,
-//			 * but free entry created by sweep in tenure could be less than that (since some of unused padding can overlap with next copied object)).
-//			 * we limit this optimization for arrays up to the size of 2 cache lines, beyond which the benefits of the optimization are believed to be non-existant */
-//           if (!_extensions->objectModel.isIndexable(forwardedHeader) || (objectReserveSizeInBytes <= 2 * _cacheLineAlignment)) {
-//				/* set the descriptor field if we should be aligning (since assuming that 0 means no is not safe) */
-//				hotFieldsAlignment = hotFieldsDescriptor;
-//				/* for simplicity, add the maximum padding we could need (and back off after allocation) */
-//				objectReserveSizeInBytes += (_cacheLineAlignment - _objectAlignmentInBytes);
-//				Assert_MM_objectAligned(env, objectReserveSizeInBytes);
-//           }
-//		}
-//#endif /* J9VM_INTERP_NATIVE_SUPPORT */
+#if defined(J9VM_INTERP_NATIVE_SUPPORT)
+		/* adjust the reserved object's size if we are aligning hot fields and this class has a known hot field */
+		if (_extensions->scavengerAlignHotFields && HOTFIELD_SHOULD_ALIGN(hotFieldsDescriptor)) {
+			/* this optimization is a source of fragmentation (alloc request size always assumes maximum padding,
+			 * but free entry created by sweep in tenure could be less than that (since some of unused padding can overlap with next copied object)).
+			 * we limit this optimization for arrays up to the size of 2 cache lines, beyond which the benefits of the optimization are believed to be non-existant */
+          if (!_extensions->objectModel.isIndexable(forwardedHeader) || (objectReserveSizeInBytes <= 2 * _cacheLineAlignment)) {
+				/* set the descriptor field if we should be aligning (since assuming that 0 means no is not safe) */
+				hotFieldsAlignment = hotFieldsDescriptor;
+				/* for simplicity, add the maximum padding we could need (and back off after allocation) */
+				objectReserveSizeInBytes += (_cacheLineAlignment - _objectAlignmentInBytes);
+				Assert_MM_objectAligned(env, objectReserveSizeInBytes);
+          }
+		}
+#endif /* J9VM_INTERP_NATIVE_SUPPORT */
 
 		copyCache = reserveMemoryForAllocateInTenureSpace(env, forwardedHeader->getObject(), objectReserveSizeInBytes);
 		if (NULL != copyCache) {
@@ -1417,25 +1403,25 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 	/* now correct for the hot field alignment */
 
 
-//#if defined(J9VM_INTERP_NATIVE_SUPPORT)
-//	if (0 != hotFieldsAlignment) {
-//		uintptr_t remainingInCacheLine = _cacheLineAlignment - ((uintptr_t)destinationObjectPtr % _cacheLineAlignment);
-//		uintptr_t alignmentBias = HOTFIELD_ALIGNMENT_BIAS(hotFieldsAlignment, _objectAlignmentInBytes);
-//		/* do alignment only if the object cannot fit in the remaining space in the cache line */
-//		if ((remainingInCacheLine < objectCopySizeInBytes) && (alignmentBias < remainingInCacheLine)) {
-//			hotFieldPadSize = ((remainingInCacheLine + _cacheLineAlignment) - (alignmentBias % _cacheLineAlignment)) % _cacheLineAlignment;
-//			hotFieldPadBase = (uintptr_t *)destinationObjectPtr;
-//			/* now fix the object pointer so that the hot field is aligned */
-//			destinationObjectPtr = (omrobjectptr_t)((uintptr_t)destinationObjectPtr + hotFieldPadSize);
-//		}
-//		/* and update the reserved size so that we "un-reserve" the extra memory we said we might need.  This is done by
-//		 * removing the excess reserve since we already accounted for the hotFieldPadSize by bumping the destination pointer
-//		 * and now we need to revert to the amount needed for the object allocation and its array alignment so the rest of
-//		 * the method continues to function without needing to know about this extra alignment calculation
-//		 */
-//		objectReserveSizeInBytes = objectReserveSizeInBytes - (_cacheLineAlignment - _objectAlignmentInBytes);
-//	}
-//#endif /* J9VM_INTERP_NATIVE_SUPPORT */
+#if defined(J9VM_INTERP_NATIVE_SUPPORT)
+	if (0 != hotFieldsAlignment) {
+		uintptr_t remainingInCacheLine = _cacheLineAlignment - ((uintptr_t)destinationObjectPtr % _cacheLineAlignment);
+		uintptr_t alignmentBias = HOTFIELD_ALIGNMENT_BIAS(hotFieldsAlignment, _objectAlignmentInBytes);
+		/* do alignment only if the object cannot fit in the remaining space in the cache line */
+		if ((remainingInCacheLine < objectCopySizeInBytes) && (alignmentBias < remainingInCacheLine)) {
+			hotFieldPadSize = ((remainingInCacheLine + _cacheLineAlignment) - (alignmentBias % _cacheLineAlignment)) % _cacheLineAlignment;
+			hotFieldPadBase = (uintptr_t *)destinationObjectPtr;
+			/* now fix the object pointer so that the hot field is aligned */
+			destinationObjectPtr = (omrobjectptr_t)((uintptr_t)destinationObjectPtr + hotFieldPadSize);
+		}
+		/* and update the reserved size so that we "un-reserve" the extra memory we said we might need.  This is done by
+		 * removing the excess reserve since we already accounted for the hotFieldPadSize by bumping the destination pointer
+		 * and now we need to revert to the amount needed for the object allocation and its array alignment so the rest of
+		 * the method continues to function without needing to know about this extra alignment calculation
+		 */
+		objectReserveSizeInBytes = objectReserveSizeInBytes - (_cacheLineAlignment - _objectAlignmentInBytes);
+	}
+#endif /* J9VM_INTERP_NATIVE_SUPPORT */
 
 
 	/* and correct for the double array alignment */
@@ -1583,17 +1569,19 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 		MM_ForwardedHeader(forwardedHeader->getObject()).copyOrWait(destinationObjectPtr);
 	}
 
-	if (NULL != forwardedHeader)
-	{
-		IDATA hotFieldOffset = _extensions->objectModel.GetHotFieldOffset(forwardedHeader);
-		if(env->_depthCount < MAX_DEPTH_COPY) {
-			GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
-			copyObjectSlot(env, &HotFieldObject);
-			env->_depthCount += 1;
-		} else {
-			env->_depthCount = 0;
+	if (_extensions->scavengerDynamicCopyOrder) {
+		if (NULL != forwardedHeader)
+		{
+			IDATA hotFieldOffset = _extensions->objectModel.GetHotFieldOffset(forwardedHeader);
+			if(env->_depthCount < MAX_DEPTH_COPY) {
+				GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
+				copyObjectSlot(env, &HotFieldObject);
+				env->_depthCount += 1;
+			} else {
+				env->_depthCount = 0;
+			}
 		}
-	}
+	} 
 
 	/* return value for updating the slot */
 	return destinationObjectPtr;

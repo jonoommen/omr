@@ -476,6 +476,7 @@ public:
 	double tiltedScavengeMaximumIncrease;
 	double scavengerCollectorExpandRatio; /**< the ratio of _avgTenureBytes we use to expand when a collectorAllocate() fails */
 	uintptr_t scavengerMaximumCollectorExpandSize; /**< the maximum amount by which we will expand when a collectorAllocate() fails */
+	bool scavengerDynamicCopyOrder;  /**< True if the scavenger is to dynamically depth copy the hot field of an object marked by the JIT */
 	bool dynamicNewSpaceSizing;
 	bool debugDynamicNewSpaceSizing;
 	bool dnssAvoidMovingObjects;
@@ -1515,6 +1516,7 @@ public:
 		, tiltedScavengeMaximumIncrease(0.10)
 		, scavengerCollectorExpandRatio(0.1)
 		, scavengerMaximumCollectorExpandSize(1024 * 1024)
+		, scavengerDynamicCopyOrder(false)
 		, dynamicNewSpaceSizing(true)
 		, debugDynamicNewSpaceSizing(false)
 		, dnssAvoidMovingObjects(true)
@@ -1655,7 +1657,7 @@ public:
 		, disableInlineCacheForAllocationThreshold(false)
 		, heapCeiling(0) /* default for normal platforms is 0 (i.e. no ceiling) */
 		, heapInitializationFailureReason(HEAP_INITIALIZATION_FAILURE_REASON_NO_ERROR)
-		, scavengerAlignHotFields(true) /* VM Design 1774: hot field alignment is on by default */
+		, scavengerAlignHotFields(true) /* VM Design 1774: hot field alignment is on by default */		
 		, suballocatorInitialSize(SUBALLOCATOR_INITIAL_SIZE) /* default for J9Heap suballocator initial size is 200 MB */
 		, suballocatorCommitSize(SUBALLOCATOR_COMMIT_SIZE) /* default for J9Heap suballocator commit size is 50 MB */
 #if defined(OMR_GC_COMPRESSED_POINTERS)
