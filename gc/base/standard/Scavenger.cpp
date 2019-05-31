@@ -1350,13 +1350,13 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			/* this optimization is a source of fragmentation (alloc request size always assumes maximum padding,
 			 * but free entry created by sweep in tenure could be less than that (since some of unused padding can overlap with next copied object)).
 			 * we limit this optimization for arrays up to the size of 2 cache lines, beyond which the benefits of the optimization are believed to be non-existant */
-          if (!_extensions->objectModel.isIndexable(forwardedHeader) || (objectReserveSizeInBytes <= 2 * _cacheLineAlignment)) {
+          	if (!_extensions->objectModel.isIndexable(forwardedHeader) || (objectReserveSizeInBytes <= 2 * _cacheLineAlignment)) {
 				/* set the descriptor field if we should be aligning (since assuming that 0 means no is not safe) */
 				hotFieldsAlignment = hotFieldsDescriptor;
 				/* for simplicity, add the maximum padding we could need (and back off after allocation) */
 				objectReserveSizeInBytes += (_cacheLineAlignment - _objectAlignmentInBytes);
 				Assert_MM_objectAligned(env, objectReserveSizeInBytes);
-          }
+				}
 		}
 #endif /* J9VM_INTERP_NATIVE_SUPPORT */
 		copyCache = reserveMemoryForAllocateInTenureSpace(env, forwardedHeader->getObject(), objectReserveSizeInBytes);
