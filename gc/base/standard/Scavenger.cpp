@@ -104,7 +104,6 @@
 
 #define FLIP_TENURE_LARGE_SCAN 4
 #define FLIP_TENURE_LARGE_SCAN_DEFERRED 5
-
 #define MAX_DEPTH_COPY 4
 
 /* VM Design 1774: Ideally we would pull these cache line values from the port library but this will suffice for
@@ -1360,7 +1359,6 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
           }
 		}
 #endif /* J9VM_INTERP_NATIVE_SUPPORT */
-
 		copyCache = reserveMemoryForAllocateInTenureSpace(env, forwardedHeader->getObject(), objectReserveSizeInBytes);
 		if (NULL != copyCache) {
 			/* Clear age and set the old bit */
@@ -1401,8 +1399,6 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 	/* Memory has been reserved */
 	destinationObjectPtr = (omrobjectptr_t)copyCache->cacheAlloc;
 	/* now correct for the hot field alignment */
-
-
 #if defined(J9VM_INTERP_NATIVE_SUPPORT)
 	if (0 != hotFieldsAlignment) {
 		uintptr_t remainingInCacheLine = _cacheLineAlignment - ((uintptr_t)destinationObjectPtr % _cacheLineAlignment);
@@ -1422,7 +1418,6 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 		objectReserveSizeInBytes = objectReserveSizeInBytes - (_cacheLineAlignment - _objectAlignmentInBytes);
 	}
 #endif /* J9VM_INTERP_NATIVE_SUPPORT */
-
 
 	/* and correct for the double array alignment */
 	newCacheAlloc = (void *) (((uint8_t *)destinationObjectPtr) + objectReserveSizeInBytes);
