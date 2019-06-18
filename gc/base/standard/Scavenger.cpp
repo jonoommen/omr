@@ -1572,7 +1572,6 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 		 * it's fully copied before letting the caller expose this new version of the object */
 		MM_ForwardedHeader(forwardedHeader->getObject()).copyOrWait(destinationObjectPtr);
 	}
-
 	/* return value for updating the slot */
 	return destinationObjectPtr;
 }
