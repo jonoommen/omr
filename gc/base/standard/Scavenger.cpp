@@ -1544,6 +1544,15 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			scavStats->_flipBytes += objectCopySizeInBytes;
 			scavStats->getFlipHistory(0)->_flipBytes[oldObjectAge + 1] += objectReserveSizeInBytes;
 		}
+		if (_extensions->scavengerDynamicCopyOrder) {
+			if (NULL != forwardedHeader) {
+				IDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);		
+				if(hotFieldOffset != 0) {	
+					GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
+					copyObjectSlot(env, &HotFieldObject);
+				} 
+			}
+		} 
 	} else {
 		/* We have not used the reserved space now, but we will for subsequent allocations. If this space was reserved for an individual object,
 		 * we might have created a TLH remainder from previous cache just before reserving this space. This space eventaully can create another remainder.
@@ -1563,20 +1572,6 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 		 * it's fully copied before letting the caller expose this new version of the object */
 		MM_ForwardedHeader(forwardedHeader->getObject()).copyOrWait(destinationObjectPtr);
 	}
-
-	if (_extensions->scavengerDynamicCopyOrder) {
-		if (NULL != forwardedHeader)
-		{
-			IDATA hotFieldOffset = _extensions->objectModel.GetHotFieldOffset(forwardedHeader);
-			if(env->_depthCount < MAX_DEPTH_COPY) {
-				GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
-				copyObjectSlot(env, &HotFieldObject);
-				env->_depthCount += 1;
-			} else {
-				env->_depthCount = 0;
-			}
-		}
-	} 
 
 	/* return value for updating the slot */
 	return destinationObjectPtr;
