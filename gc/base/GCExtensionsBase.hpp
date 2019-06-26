@@ -1516,7 +1516,7 @@ public:
 		, tiltedScavengeMaximumIncrease(0.10)
 		, scavengerCollectorExpandRatio(0.1)
 		, scavengerMaximumCollectorExpandSize(1024 * 1024)
-		, scavengerDynamicCopyOrder(false)
+		, scavengerDynamicCopyOrder(true)
 		, dynamicNewSpaceSizing(true)
 		, debugDynamicNewSpaceSizing(false)
 		, dnssAvoidMovingObjects(true)
