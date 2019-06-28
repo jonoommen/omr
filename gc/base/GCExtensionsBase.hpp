@@ -1479,7 +1479,7 @@ public:
 		, gcThreadCount(0)
 		, gcThreadCountForced(false)
 #if defined(OMR_GC_MODRON_SCAVENGER) || defined(OMR_GC_VLHGC)
-		, scavengerScanOrdering(OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL)
+		, scavengerScanOrdering(OMR_GC_SCAVENGER_SCANORDERING_BREADTH_FIRST)
 #endif /* OMR_GC_MODRON_SCAVENGER || OMR_GC_VLHGC */
 #if defined(OMR_GC_MODRON_SCAVENGER)
 		, scvTenureRatioHigh(OMR_SCV_TENURE_RATIO_HIGH)
@@ -1657,7 +1657,7 @@ public:
 		, disableInlineCacheForAllocationThreshold(false)
 		, heapCeiling(0) /* default for normal platforms is 0 (i.e. no ceiling) */
 		, heapInitializationFailureReason(HEAP_INITIALIZATION_FAILURE_REASON_NO_ERROR)
-		, scavengerAlignHotFields(true) /* VM Design 1774: hot field alignment is on by default */		
+		, scavengerAlignHotFields(false) /* VM Design 1774: hot field alignment is on by default */		
 		, suballocatorInitialSize(SUBALLOCATOR_INITIAL_SIZE) /* default for J9Heap suballocator initial size is 200 MB */
 		, suballocatorCommitSize(SUBALLOCATOR_COMMIT_SIZE) /* default for J9Heap suballocator commit size is 50 MB */
 #if defined(OMR_GC_COMPRESSED_POINTERS)
