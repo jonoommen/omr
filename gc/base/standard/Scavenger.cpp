@@ -1548,7 +1548,7 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			if (NULL != forwardedHeader) {
 				IDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);	
 				if (hotFieldOffset != 0) {		
-					if (!_extensions->objectModel.isIndexable(forwardedHeader)) {
+				//	if (!_extensions->objectModel.isIndexable(forwardedHeader)) {
 						GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
 						omrobjectptr_t objectPtr = HotFieldObject.readReferenceFromSlot();
 						if (NULL != objectPtr) {
@@ -1559,7 +1559,7 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 								env->_depthCount = 0;
 							}
 						}
-					}
+				//	}
 				} 
 			} 
 		}
