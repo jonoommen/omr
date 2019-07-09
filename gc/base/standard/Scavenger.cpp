@@ -1545,7 +1545,7 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			scavStats->getFlipHistory(0)->_flipBytes[oldObjectAge + 1] += objectReserveSizeInBytes;
 		}
 		if (_extensions->scavengerDynamicCopyOrder) {	
-		//	if (NULL != forwardedHeader) {
+			if (NULL != forwardedHeader) {
 				IDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);	
 				if (hotFieldOffset != 0) {		
 				//	if (!_extensions->objectModel.isIndexable(forwardedHeader)) {
@@ -1561,7 +1561,7 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 				//		}
 				//	}
 				} 
-		//	} 
+			} 
 		}
 	} else {
 		/* We have not used the reserved space now, but we will for subsequent allocations. If this space was reserved for an individual object,
