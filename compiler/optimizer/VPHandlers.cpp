@@ -2761,12 +2761,20 @@ TR::Node *constrainIaload(OMR::ValuePropagation *vp, TR::Node *node)
       }
 
    TR::VPConstraint * base = vp->getConstraint(node->getFirstChild(), isGlobal);
-
+   
+   char *clazzName = node->getSymbolReference()->getOwningMethod(vp->comp())->classNameChars();
+   uint16_t clazzNameLen = node->getSymbolReference()->getOwningMethod(vp->comp())->classNameLength();
+    
+   if (vp->_curBlock->getGlobalNormalizedFrequency(vp->comp()->getFlowGraph()) >= TR::Options::_hotFieldThreshold) {
+      //printf("VPHandlerHotPotentialObjects: Class name is %.*s\n", clazzNameLen, clazzName); 
+   }
+   
    if (base && base->getClass() && !vp->comp()->getOption(TR_DisableMarkingOfHotFields) &&
       node->getFirstChild()->getOpCode().hasSymbolReference() &&
       node->getFirstChild()->getSymbol()->isCollectedReference() &&
       vp->_curBlock->getGlobalNormalizedFrequency(vp->comp()->getFlowGraph()) >= TR::Options::_hotFieldThreshold)
       {
+      //printf("HotVPHandlerObjects: Class name is %.*s\n", clazzNameLen, clazzName);    
       vp->comp()->fej9()->markHotField(vp->comp(), node->getSymbolReference(), base->getClass(), base->isFixedClass());
       }
 

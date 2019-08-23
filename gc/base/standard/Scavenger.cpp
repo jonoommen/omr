@@ -1316,6 +1316,7 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 	/* Object is in the evacuate space but not forwarded. */
 	_extensions->objectModel.calculateObjectDetailsForCopy(env, forwardedHeader, &objectCopySizeInBytes, &objectReserveSizeInBytes, &hotFieldsDescriptor);
 
+
 	Assert_MM_objectAligned(env, objectReserveSizeInBytes);
 
 	if (0 == (((uintptr_t)1 << objectAge) & _tenureMask)) {
@@ -1544,25 +1545,90 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			scavStats->_flipBytes += objectCopySizeInBytes;
 			scavStats->getFlipHistory(0)->_flipBytes[oldObjectAge + 1] += objectReserveSizeInBytes;
 		}
+		
+		UDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);
+/*
+		printf("objectCopySizeInBytes:%ld, objectReserveSizeInBytes:%ld \n",objectCopySizeInBytes, objectReserveSizeInBytes);
+		_extensions->objectModel.printAllObjectClasses(forwardedHeader);
+		if (!_extensions->objectModel.isIndexable(forwardedHeader))
+			_extensions->objectModel.printAllIndexableObjectClasses(forwardedHeader);
+		if (hotFieldOffset != 0)
+			_extensions->objectModel.printAllHotObjectClasses(forwardedHeader);
+		if (hotFieldOffset != 0 && env->_depthCount < MAX_DEPTH_COPY)
+			_extensions->objectModel.printAllDepthCopiedHotObjects(forwardedHeader); 
+
+		if (hotFieldOffset != 0 && !(env->_depthCount < MAX_DEPTH_COPY))
+			_extensions->objectModel.printAllDepthFailedHotObjects(forwardedHeader);
+
+		if (objectCopySizeInBytes >128 && env->_depthCount !=0)
+			printf("depth copied large object, size is objectCopySizeInBytes:%ld\n",objectCopySizeInBytes);
+							
+*/		
 		if (_extensions->scavengerDynamicCopyOrder) {	
-		//	if (NULL != forwardedHeader) {
-				IDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);	
-				if (hotFieldOffset != 0) {		
-				//	if (!_extensions->objectModel.isIndexable(forwardedHeader)) {
-						GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
-				//		omrobjectptr_t objectPtr = HotFieldObject.readReferenceFromSlot();
-				//		if (NULL != objectPtr) {
-							if (env->_depthCount < MAX_DEPTH_COPY) {
-								env->_depthCount += 1;
-								copyObjectSlot(env, &HotFieldObject);
-							} else {
-								env->_depthCount = 0;
-							}
-				//		}
-				//	}
-				} 
-		//	} 
+			//	if (NULL != forwardedHeader) {
+				//IDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);			
+				if (hotFieldOffset != 0) {
+					if(env->_depthCount < MAX_DEPTH_COPY) {			
+							GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
+							//printf("HotfieldOffset:%lu, hotFieldsDescriptor:%lu", hotFieldOffset, hotFieldsDescriptor);
+
+/*							omrobjectptr_t objectPtr = HotFieldObject.readReferenceFromSlot();
+							fomrobject_t* objectPtr2 = HotFieldObject.readAddressFromSlot();
+							env->_depthCount += 1;
+
+							IDATA *scanPointer =(IDATA*)(copyCache->scanCurrent);
+							IDATA *cacheAlloc = (IDATA*)(copyCache->cacheAlloc);
+							IDATA *hotField = (IDATA*)objectPtr; 
+							IDATA *hotField1 = (IDATA*)objectPtr2; 
+							IDATA *forwardedHeaderInt = (IDATA*)forwardedHeader; 
+
+							IDATA distance1 = forwardedHeaderInt - hotField;
+							IDATA distance2 = cacheAlloc - scanPointer; 
+							IDATA distance3 = (cacheAlloc - hotField1)*16;
+							if(distance3 < 129)
+								printf("depthcopying close objects \n");
+							else 
+								printf("depthcopying farrr objects \n");
+								//_extensions->objectModel.printDistanceObjects(forwardedHeader);
+							printf("Forward header:%p Destinationptr:%p ScanPointer:%p, Allocpointer:%p, HotfieldObjectPointer1:%p, HotfieldObjectPointer2:%p, HotfieldObjectPointer3:%p,  Distance Alloc-Scan:%ld, Distance Alloc-Hotfield:%ld, Distance Alloc-ScanCurrent:%ld, effective copyscancache:%p, copycache:%p  \n",
+							forwardedHeader, destinationObjectPtr, copyCache->scanCurrent, copyCache->cacheAlloc, objectPtr, objectPtr2, &HotFieldObject, distance3, distance1, distance2, env->_effectiveCopyScanCache, copyCache);
+*/
+							copyObjectSlot(env, &HotFieldObject); 
+					} 
+				} else {
+/*					IDATA *scanPointer =(IDATA*)(copyCache->scanCurrent);
+					IDATA *cacheAlloc = (IDATA*)(copyCache->cacheAlloc);
+					IDATA distance3 = (cacheAlloc - scanPointer)*16;
+					if(distance3 < 129)
+						_extensions->objectModel.printDistanceObjects(forwardedHeader);
+					printf("Depth reset \n"); 
+*/					env->_depthCount = 0; 
+				}				
 		}
+				//if (hotFieldOffset != 2) {		
+				//	if (!_extensions->objectModel.isIndexable(forwardedHeader)) {
+						//GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
+						//omrobjectptr_t objectPtr = HotFieldObject.readReferenceFromSlot();
+						//_extensions->objectModel.printHotFieldInfo(forwardedHeader, objectPtr);
+						//if (NULL != objectPtr) {
+							//if (env->_depthCount < MAX_DEPTH_COPY) {
+								//env->_depthCount += 1;
+								//int *scanPointer =(int*)(copyCache->scanCurrent);
+								//int *cacheAlloc = (int*)(copyCache->cacheAlloc);
+								//int *hotField = (int*)objectPtr; 
+
+								//int distance1 = cacheAlloc - hotField;
+								//int distance2 = cacheAlloc - scanPointer; 
+							//	printf("ScanPointer:%p, Allocpointer:%p, HotfieldObjectPointer:%p, Distance Alloc-Hotfield:%d, Distance Alloc-ScanCurrent:%d  \n",copyCache->cacheAlloc, copyCache->scanCurrent, objectPtr, distance1, distance2);
+							//	printf("ScanPointer:%p, Allocpointer:%p, destinationObjectPtr:%p HotfieldObjectPointer:%p\n",copyCache->cacheAlloc, copyCache->scanCurrent, destinationObjectPtr, objectPtr);
+							//	copyObjectSlot(env, &HotFieldObject);
+						//	} else {
+						//		env->_depthCount = 0;
+						//	}
+						//}
+				//	}
+				//} 
+		//}
 	} else {
 		/* We have not used the reserved space now, but we will for subsequent allocations. If this space was reserved for an individual object,
 		 * we might have created a TLH remainder from previous cache just before reserving this space. This space eventaully can create another remainder.
