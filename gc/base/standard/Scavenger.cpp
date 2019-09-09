@@ -104,7 +104,7 @@
 
 #define FLIP_TENURE_LARGE_SCAN 4
 #define FLIP_TENURE_LARGE_SCAN_DEFERRED 5
-#define MAX_DEPTH_COPY 4
+#define MAX_DEPTH_COPY 2
 
 /* VM Design 1774: Ideally we would pull these cache line values from the port library but this will suffice for
  * a quick implementation
@@ -1545,12 +1545,11 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			scavStats->_flipBytes += objectCopySizeInBytes;
 			scavStats->getFlipHistory(0)->_flipBytes[oldObjectAge + 1] += objectReserveSizeInBytes;
 		}
-		
-		UDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);
-/*
-		printf("objectCopySizeInBytes:%ld, objectReserveSizeInBytes:%ld \n",objectCopySizeInBytes, objectReserveSizeInBytes);
-		_extensions->objectModel.printAllObjectClasses(forwardedHeader);
-		if (!_extensions->objectModel.isIndexable(forwardedHeader))
+
+//		printf("objectCopySizeInBytes:%ld, objectReserveSizeInBytes:%ld \n",objectCopySizeInBytes, objectReserveSizeInBytes);
+//		_extensions->objectModel.printAllObjectClasses(forwardedHeader);
+
+/*		if (!_extensions->objectModel.isIndexable(forwardedHeader))
 			_extensions->objectModel.printAllIndexableObjectClasses(forwardedHeader);
 		if (hotFieldOffset != 0)
 			_extensions->objectModel.printAllHotObjectClasses(forwardedHeader);
@@ -1564,47 +1563,43 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			printf("depth copied large object, size is objectCopySizeInBytes:%ld\n",objectCopySizeInBytes);
 							
 */		
+
+
+
+
+
+			//printf("HotfieldOffset:%lu, hotFieldsDescriptor:%lu", hotFieldOffset, hotFieldsDescriptor);
+
+
+
 		if (_extensions->scavengerDynamicCopyOrder) {	
 			//	if (NULL != forwardedHeader) {
-				//IDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);			
-				if (hotFieldOffset != 0) {
-					if(env->_depthCount < MAX_DEPTH_COPY) {			
-							GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
-							//printf("HotfieldOffset:%lu, hotFieldsDescriptor:%lu", hotFieldOffset, hotFieldsDescriptor);
-
-/*							omrobjectptr_t objectPtr = HotFieldObject.readReferenceFromSlot();
-							fomrobject_t* objectPtr2 = HotFieldObject.readAddressFromSlot();
-							env->_depthCount += 1;
-
-							IDATA *scanPointer =(IDATA*)(copyCache->scanCurrent);
-							IDATA *cacheAlloc = (IDATA*)(copyCache->cacheAlloc);
-							IDATA *hotField = (IDATA*)objectPtr; 
-							IDATA *hotField1 = (IDATA*)objectPtr2; 
-							IDATA *forwardedHeaderInt = (IDATA*)forwardedHeader; 
-
-							IDATA distance1 = forwardedHeaderInt - hotField;
-							IDATA distance2 = cacheAlloc - scanPointer; 
-							IDATA distance3 = (cacheAlloc - hotField1)*16;
-							if(distance3 < 129)
-								printf("depthcopying close objects \n");
-							else 
-								printf("depthcopying farrr objects \n");
-								//_extensions->objectModel.printDistanceObjects(forwardedHeader);
-							printf("Forward header:%p Destinationptr:%p ScanPointer:%p, Allocpointer:%p, HotfieldObjectPointer1:%p, HotfieldObjectPointer2:%p, HotfieldObjectPointer3:%p,  Distance Alloc-Scan:%ld, Distance Alloc-Hotfield:%ld, Distance Alloc-ScanCurrent:%ld, effective copyscancache:%p, copycache:%p  \n",
-							forwardedHeader, destinationObjectPtr, copyCache->scanCurrent, copyCache->cacheAlloc, objectPtr, objectPtr2, &HotFieldObject, distance3, distance1, distance2, env->_effectiveCopyScanCache, copyCache);
-*/
-							copyObjectSlot(env, &HotFieldObject); 
-					} 
-				} else {
-/*					IDATA *scanPointer =(IDATA*)(copyCache->scanCurrent);
-					IDATA *cacheAlloc = (IDATA*)(copyCache->cacheAlloc);
-					IDATA distance3 = (cacheAlloc - scanPointer)*16;
-					if(distance3 < 129)
-						_extensions->objectModel.printDistanceObjects(forwardedHeader);
-					printf("Depth reset \n"); 
-*/					env->_depthCount = 0; 
-				}				
+			UDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);
+			UDATA hotFieldOffset2 = _extensions->objectModel.getHotFieldOffset2(forwardedHeader);
+			//printf("hotfieldoffset1:%lu, hotfieldoffset2:%lu \n",hotFieldOffset, hotFieldOffset2);
+			if (hotFieldOffset != 0 && hotFieldOffset2 != 0 && env->_depthCount < MAX_DEPTH_COPY) {				
+				env->_depthCount += 1;
+				GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));		
+				GC_SlotObject HotFieldObject2(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset2));
+				//printf("depthcopying first hot field \n");
+				copyObjectSlot(env, &HotFieldObject);
+				env->_depthCount = 1;	
+				//printf("depthcopying second hot field\n");
+				copyObjectSlot(env, &HotFieldObject2); 			 					
+			} 
+			else if (hotFieldOffset != 0 && env->_depthCount < MAX_DEPTH_COPY)  {				
+				env->_depthCount += 1;
+				GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
+				//printf("depthcopying only hot field \n");
+				copyObjectSlot(env, &HotFieldObject);	
+			} 
+			else {
+				//printf("depth reset\n");
+				env->_depthCount = 0; 	
+			}
 		}
+
+
 				//if (hotFieldOffset != 2) {		
 				//	if (!_extensions->objectModel.isIndexable(forwardedHeader)) {
 						//GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
