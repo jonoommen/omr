@@ -104,6 +104,7 @@
 
 #define FLIP_TENURE_LARGE_SCAN 4
 #define FLIP_TENURE_LARGE_SCAN_DEFERRED 5
+#define DEPTH_COPY_COUNT_MAX 2
 
 /* VM Design 1774: Ideally we would pull these cache line values from the port library but this will suffice for
  * a quick implementation
@@ -246,8 +247,6 @@ MM_Scavenger::initialize(MM_EnvironmentBase *env)
 	 * will contain a valid entry. We set the appropriate number of caches per thread here */
 	switch (_extensions->scavengerScanOrdering) {
 	case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_BREADTH_FIRST:
-		_cachesPerThread = FLIP_TENURE_LARGE_SCAN;
-		break;
 	case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST:
 		_cachesPerThread = FLIP_TENURE_LARGE_SCAN;
 		break;
@@ -917,9 +916,9 @@ MM_Scavenger::calculateOptimumCopyScanCacheSize(MM_EnvironmentStandard *env)
 		cacheSize = OMR_MIN(cacheSizeBasedOnWaitingCount, cacheSize);
 	}
 
-	env->approxScanCacheCount = _scavengeCacheScanList.getApproximateEntryCount();
-	if (env->approxScanCacheCount < threadCount) {
-		uintptr_t cacheSizeBasedOnScanCacheCount = calculateCopyScanCacheSizeForQueueLength(maxCacheSize, threadCount, env->approxScanCacheCount);
+	env->_approxScanCacheCount = _scavengeCacheScanList.getApproximateEntryCount();
+	if (env->_approxScanCacheCount < threadCount) {
+		uintptr_t cacheSizeBasedOnScanCacheCount = calculateCopyScanCacheSizeForQueueLength(maxCacheSize, threadCount, env->_approxScanCacheCount);
 		cacheSize = OMR_MIN(cacheSizeBasedOnScanCacheCount, cacheSize);
 	}
 
@@ -1541,32 +1540,8 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			scavStats->_flipBytes += objectCopySizeInBytes;
 			scavStats->getFlipHistory(0)->_flipBytes[oldObjectAge + 1] += objectReserveSizeInBytes;
 		}
-		if (_extensions->scavengerScanOrdering == MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST) {
-			UDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);
-			if (hotFieldOffset < UDATA_MAX) {
-				GC_SlotObject HotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
-
-				omrobjectptr_t objectPtr = HotFieldObject.readReferenceFromSlot();							
-				if (NULL != objectPtr && isObjectInEvacuateMemory(objectPtr)) {
-					/* Object needs to be copy and forwarded.  Check if the work has already been done */
-					MM_ForwardedHeader forwardHeaderHotField(objectPtr);
-					if (NULL == forwardHeaderHotField.getForwardedObject()) {
-							copyObject(env, &forwardHeaderHotField);	
-					}
-				}	
-				UDATA hotFieldOffset2 = _extensions->objectModel.getHotFieldOffset2(forwardedHeader);			
-				if (hotFieldOffset2 < UDATA_MAX) {
-					GC_SlotObject HotFieldObject2(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset2));
-					omrobjectptr_t objectPtr2 = HotFieldObject2.readReferenceFromSlot();							
-					if (NULL != objectPtr2 && isObjectInEvacuateMemory(objectPtr2)) {
-						/* Object needs to be copy and forwarded.  Check if the work has already been done */
-						MM_ForwardedHeader forwardHeaderHotField2(objectPtr2);
-						if (NULL == forwardHeaderHotField2.getForwardedObject()) {
-								copyObject(env, &forwardHeaderHotField2);	
-						}
-					}
-				}
-			} 
+		if (_extensions->scavengerScanOrdering == MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST) {	
+			depthCopyHotFields(env, forwardedHeader, destinationObjectPtr);
 		}
 	} else {
 		/* We have not used the reserved space now, but we will for subsequent allocations. If this space was reserved for an individual object,
@@ -1589,6 +1564,41 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 	}
 	/* return value for updating the slot */
 	return destinationObjectPtr;
+}
+
+
+MMINLINE void
+MM_Scavenger::depthCopyHotFields(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHeader, omrobjectptr_t destinationObjectPtr) {
+	if (env->_hotFieldCopyDepthCount < DEPTH_COPY_COUNT_MAX) {
+		UDATA hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);
+		if (hotFieldOffset < UDATA_MAX) {
+			GC_SlotObject hotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset));
+			omrobjectptr_t objectPtr = hotFieldObject.readReferenceFromSlot();							
+			if (isObjectInEvacuateMemory(objectPtr)) {
+				/* Object needs to be copy and forwarded.  Check if the work has already been done */
+				MM_ForwardedHeader forwardHeaderHotField(objectPtr);
+				if (NULL == forwardHeaderHotField.getForwardedObject()) {
+					env->_hotFieldCopyDepthCount += 1;
+					copyObject(env, &forwardHeaderHotField);
+					env->_hotFieldCopyDepthCount -= 1;
+				}
+			}	
+			UDATA hotFieldOffset2 = _extensions->objectModel.getHotFieldOffset2(forwardedHeader);			
+			if (hotFieldOffset2 < UDATA_MAX) {
+				GC_SlotObject hotFieldObject2(_omrVM, (fomrobject_t*)(destinationObjectPtr + hotFieldOffset2));
+				omrobjectptr_t objectPtr2 = hotFieldObject2.readReferenceFromSlot();							
+				if (isObjectInEvacuateMemory(objectPtr2)) {
+					/* Object needs to be copy and forwarded.  Check if the work has already been done */
+					MM_ForwardedHeader forwardHeaderHotField2(objectPtr2);
+					if (NULL == forwardHeaderHotField2.getForwardedObject()) {
+						env->_hotFieldCopyDepthCount += 1;
+						copyObject(env, &forwardHeaderHotField2);
+						env->_hotFieldCopyDepthCount -= 1;	
+					}
+				}
+			}
+		}
+	}
 }
 
 /****************************************
@@ -1782,7 +1792,7 @@ MM_Scavenger::deepScanOutline(MM_EnvironmentStandard *env, omrobjectptr_t object
 		objDeepScanned += 1;
 #endif /* J9MODRON_TGC_PARALLEL_STATISTICS */
 
-		if(env->approxScanCacheCount > freeListUtilizationLimit) {
+		if(env->_approxScanCacheCount > freeListUtilizationLimit) {
 			break;
 		}
 		currentDeepObj = prioritySlot.readReferenceFromSlot();
@@ -2185,8 +2195,6 @@ MM_Scavenger::completeScan(MM_EnvironmentStandard *env)
 
 		switch (_extensions->scavengerScanOrdering) {
 		case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_BREADTH_FIRST:
-			completeScanCache(env, scanCache);
-			break;
 		case MM_GCExtensionsBase::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST:
 			completeScanCache(env, scanCache);
 			break;

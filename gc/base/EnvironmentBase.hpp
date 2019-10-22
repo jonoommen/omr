@@ -148,7 +148,10 @@ public:
 
 	uintptr_t _oolTraceAllocationBytes; /**< Tracks the bytes allocated since the last ool object trace */
 
-	uintptr_t approxScanCacheCount; /**< Local copy of approximate entries in global Cache Scan List. Updated upon allocation of new cache. */
+#if defined(OMR_GC_MODRON_SCAVENGER)
+	uintptr_t _approxScanCacheCount; /**< Local copy of approximate entries in global Cache Scan List. Updated upon allocation of new cache. */
+	uintptr_t _hotFieldCopyDepthCount; /**< Used for dynamic breadth first scan ordering. Counter for the current copying depth based on the initial object copied. */
+#endif /* OMR_GC_MODRON_SCAVENGER */
 
 	MM_Validator *_activeValidator; /**< Used to identify and report crashes inside Validators */
 
@@ -646,7 +649,10 @@ public:
 		,_slaveThreadCpuTimeNanos(0)
 		,_freeEntrySizeClassStats()
 		,_oolTraceAllocationBytes(0)
-		,approxScanCacheCount(0)
+#if defined(OMR_GC_MODRON_SCAVENGER)
+		,_approxScanCacheCount(0)
+		,_hotFieldCopyDepthCount(0)
+#endif /* OMR_GC_MODRON_SCAVENGER */	
 		,_activeValidator(NULL)
 		,_lastSyncPointReached(NULL)
 #if defined(OMR_GC_SEGREGATED_HEAP)
@@ -698,7 +704,10 @@ public:
 		,_slaveThreadCpuTimeNanos(0)
 		,_freeEntrySizeClassStats()
 		,_oolTraceAllocationBytes(0)
-		,approxScanCacheCount(0)
+#if defined(OMR_GC_MODRON_SCAVENGER)
+		,_approxScanCacheCount(0)
+		,_hotFieldCopyDepthCount(0)
+#endif /* OMR_GC_MODRON_SCAVENGER */
 		,_activeValidator(NULL)
 		,_lastSyncPointReached(NULL)
 #if defined(OMR_GC_SEGREGATED_HEAP)

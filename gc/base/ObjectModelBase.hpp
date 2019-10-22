@@ -847,6 +847,18 @@ public:
 		return _delegate.getForwardedObjectSizeInBytes(forwardedHeader);
 	}
 
+	MMINLINE UDATA
+	getHotFieldOffset(MM_ForwardedHeader *forwardedHeader)
+	{
+		return _delegate.getHotFieldOffset(forwardedHeader);
+	}
+
+	MMINLINE UDATA
+	getHotFieldOffset2(MM_ForwardedHeader *forwardedHeader)
+	{
+		return _delegate.getHotFieldOffset2(forwardedHeader);
+	}
+
 	/**
 	 * Extract the flag bits from an unforwarded object. Flag bits are returned in the low-order byte of the returned value.
 	 *

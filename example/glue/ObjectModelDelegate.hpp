@@ -201,6 +201,18 @@ public:
 		return false;
 	}
 
+	MMINLINE UDATA
+	getHotFieldOffset(MM_ForwardedHeader *forwardedHeader)
+	{
+		return UDATA_MAX;
+	}
+
+	MMINLINE UDATA
+	getHotFieldOffset2(MM_ForwardedHeader *forwardedHeader)
+	{
+		return UDATA_MAX;
+	}
+
 	/**
 	 * Get the instance size (total) of a forwarded object from the forwarding pointer. The  size must
 	 * include the header and any expansion bytes to be allocated if the object will grow when moved.
