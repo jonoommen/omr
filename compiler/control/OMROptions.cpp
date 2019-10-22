@@ -1616,7 +1616,7 @@ int32_t       OMR::Options::_interpreterSamplingDivisorInStartupMode = -1; // un
 int32_t       OMR::Options::_numJitEntries = 0;
 int32_t       OMR::Options::_numVmEntries = 0;
 int32_t       OMR::Options::_numVecRegsToLock=0;
-int32_t       OMR::Options::_hotFieldThreshold = 100;
+int32_t       OMR::Options::_hotFieldThreshold = 200;
 int32_t       OMR::Options::_maxNumPrexAssumptions = 209;
 int32_t       OMR::Options::_maxNumVisitedSubclasses = 500;
 
