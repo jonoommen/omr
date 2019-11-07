@@ -2767,7 +2767,7 @@ TR::Node *constrainIaload(OMR::ValuePropagation *vp, TR::Node *node)
       node->getFirstChild()->getSymbol()->isCollectedReference() &&
       frequency >= TR::Options::_hotFieldThreshold)
       {
-      vp->comp()->fej9()->markHotField(frequency, vp->comp(), node->getSymbolReference(), base->getClass(), base->isFixedClass());
+      vp->comp()->fej9()->markHotField(vp->comp(), node->getSymbolReference(), base->getClass(), base->isFixedClass(), frequency);
       }
 
    if (node->getSymbolReference())
