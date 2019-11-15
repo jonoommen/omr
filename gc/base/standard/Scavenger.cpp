@@ -1549,7 +1549,6 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 		//_extensions->objectModel.printClassDetails(forwardedHeader);
 		if (_extensions->scavengerScanOrdering == MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST) {	
 			if(_extensions->objectModel.isIndexable(forwardedHeader)) {
-				_extensions->objectModel.printClassDetails(forwardedHeader);
 				depthCopyAllArraySlots(env, env->_effectiveCopyScanCache, destinationObjectPtr);
 			}
 			
