@@ -104,7 +104,7 @@
 
 #define FLIP_TENURE_LARGE_SCAN 4
 #define FLIP_TENURE_LARGE_SCAN_DEFERRED 5
-#define DEPTH_COPY_COUNT_MAX 2
+#define DEPTH_COPY_COUNT_MAX 3
 
 /* VM Design 1774: Ideally we would pull these cache line values from the port library but this will suffice for
  * a quick implementation
@@ -1545,8 +1545,16 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			scavStats->_flipBytes += objectCopySizeInBytes;
 			scavStats->getFlipHistory(0)->_flipBytes[oldObjectAge + 1] += objectReserveSizeInBytes;
 		}
+
+		//_extensions->objectModel.printClassDetails(forwardedHeader);
 		if (_extensions->scavengerScanOrdering == MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST) {	
-			depthCopyHotFields(env, forwardedHeader, destinationObjectPtr);
+			if(_extensions->objectModel.isIndexable(forwardedHeader)) {
+				_extensions->objectModel.printClassDetails(forwardedHeader);
+				depthCopyAllArraySlots(env, env->_effectiveCopyScanCache, destinationObjectPtr);
+			}
+			
+			else 
+				depthCopyHotFields(env, forwardedHeader, destinationObjectPtr);
 		}
 	} else {
 		/* We have not used the reserved space now, but we will for subsequent allocations. If this space was reserved for an individual object,
@@ -1583,6 +1591,7 @@ MM_Scavenger::depthCopyHotFields(MM_EnvironmentStandard *env, MM_ForwardedHeader
 				/* Object needs to be copy and forwarded.  Check if the work has already been done */
 				MM_ForwardedHeader forwardHeaderHotField(objectPtr);
 				if (NULL == forwardHeaderHotField.getForwardedObject()) {
+					//printf("depthCopyHotFields \n");
 					env->_hotFieldCopyDepthCount += 1;
 					copyObject(env, &forwardHeaderHotField);
 					env->_hotFieldCopyDepthCount -= 1;
@@ -1596,6 +1605,7 @@ MM_Scavenger::depthCopyHotFields(MM_EnvironmentStandard *env, MM_ForwardedHeader
 					/* Object needs to be copy and forwarded.  Check if the work has already been done */
 					MM_ForwardedHeader forwardHeaderHotField2(objectPtr2);
 					if (NULL == forwardHeaderHotField2.getForwardedObject()) {
+						//printf("depthCopyHotFields \n");
 						env->_hotFieldCopyDepthCount += 1;
 						copyObject(env, &forwardHeaderHotField2);
 						env->_hotFieldCopyDepthCount -= 1;	
@@ -1605,6 +1615,27 @@ MM_Scavenger::depthCopyHotFields(MM_EnvironmentStandard *env, MM_ForwardedHeader
 		}
 	}
 }
+
+
+
+
+
+
+
+
+void
+MM_Scavenger::depthCopyAllArraySlots(MM_EnvironmentStandard *env, MM_CopyScanCacheStandard *scanCache, omrobjectptr_t objectPtr) {
+		//printf("depthCopyAllArraySlots \n");
+		bool shouldBeRemembered = scavengeObjectSlots(env, scanCache, objectPtr, GC_ObjectScanner::scanHeap, NULL);
+		if (shouldBeRemembered) {
+			rememberObject(env, objectPtr);
+		}
+}
+
+
+
+
+
 
 /****************************************
  * Object scan and copy routines
@@ -1728,6 +1759,7 @@ MM_Scavenger::scavengeObjectSlots(MM_EnvironmentStandard *env, MM_CopyScanCacheS
 		uintptr_t splitIndex = (NULL != scanCache) ? scanCache->_arraySplitIndex : 0;
 		if (!splitIndexableObjectScanner(env, objectScanner, splitIndex, rememberedSetSlot)) {
 			/* scan to end of array if can't split */
+			//printf("Scanning to end of array\n");
 			((GC_IndexableObjectScanner *)objectScanner)->scanToLimit();
 		}
 	}
@@ -1736,7 +1768,7 @@ MM_Scavenger::scavengeObjectSlots(MM_EnvironmentStandard *env, MM_CopyScanCacheS
 	uint64_t slotsScanned = 0;
 	bool shouldRemember = false;
 	GC_SlotObject *slotObject = NULL;
-
+	//doesn't array get copied slot by slot??
 	MM_CopyScanCacheStandard **copyCache = &(env->_effectiveCopyScanCache);
 	while (NULL != (slotObject = objectScanner->getNextSlot())) {
 		bool isSlotObjectInNewSpace = copyAndForward(env, slotObject);
