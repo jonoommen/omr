@@ -1604,7 +1604,8 @@ MM_Scavenger::depthCopyHotFields(MM_EnvironmentStandard *env, MM_ForwardedHeader
 					/* Object needs to be copy and forwarded.  Check if the work has already been done */
 					MM_ForwardedHeader forwardHeaderHotField2(objectPtr2);
 					if (NULL == forwardHeaderHotField2.getForwardedObject()) {
-						//printf("depthCopyHotFields \n");
+						//printf("depthCopyHotFields, distance is: %d \n",env->_scavengerStats.countCopyDistance((uintptr_t)slotObject->readAddressFromSlot(), (uintptr_t)slotObject->readReferenceFromSlot()));
+						
 						env->_hotFieldCopyDepthCount += 1;
 						copyObject(env, &forwardHeaderHotField2);
 						env->_hotFieldCopyDepthCount -= 1;	
