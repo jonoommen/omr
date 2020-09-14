@@ -267,17 +267,17 @@ public:
 	MMINLINE void flushCopyScanCounts(MM_EnvironmentBase* env, bool majorFlush);
 
 	/* Depth copy the hot fields of an object.
-	 * @param forwardedHeader - forwarded header of an object
-	 * @param destinationObjectPtr - destinationObjectPtr of the object described by the forwardedHeader
+	 * @param forwardedHeader Forwarded header of an object
+	 * @param destinationObjectPtr DestinationObjectPtr of the object described by the forwardedHeader
 	 */ 
 	MMINLINE void depthCopyHotFields(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHeader, omrobjectptr_t destinationObjectPtr);
 	
 	/* Copy the the hot field of an object.
 	 * Valid if scavenger dynamicBreadthScanOrdering is enabled.
-	 * @param destinationObjectPtr - the object who's hot field will be copied
-	 * @param offset  - the object field offset of the hot field to be copied 
+	 * @param destinationObjectPtr The object who's hot field will be copied
+	 * @param offset The object field offset of the hot field to be copied
 	 */ 
-	MMINLINE void copyHotField(MM_EnvironmentStandard *env, omrobjectptr_t destinationObjectPtr, U_8 offset);
+	MMINLINE void copyHotField(MM_EnvironmentStandard *env, omrobjectptr_t destinationObjectPtr, uint8_t offset);
 
 	MMINLINE void updateCopyScanCounts(MM_EnvironmentBase* env, uint64_t slotsScanned, uint64_t slotsCopied);
 	bool splitIndexableObjectScanner(MM_EnvironmentStandard *env, GC_ObjectScanner *objectScanner, uintptr_t startIndex, omrobjectptr_t *rememberedSetSlot);

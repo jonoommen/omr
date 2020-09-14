@@ -1681,14 +1681,14 @@ MMINLINE void
 MM_Scavenger::depthCopyHotFields(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHeader, omrobjectptr_t destinationObjectPtr) {
 	/* depth copy the hot fields of an object up to a depth specified by depthCopyMax */
 	if (env->_hotFieldCopyDepthCount < _extensions->depthCopyMax) {
-		U_8 hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);
-		if (U_8_MAX != hotFieldOffset) {
+		uint8_t hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);
+		if (UINT8_MAX != hotFieldOffset) {
 			copyHotField(env, destinationObjectPtr, hotFieldOffset);
-			U_8 hotFieldOffset2 = _extensions->objectModel.getHotFieldOffset2(forwardedHeader);
-			if (U_8_MAX != hotFieldOffset2) {
+			uint8_t hotFieldOffset2 = _extensions->objectModel.getHotFieldOffset2(forwardedHeader);
+			if (UINT8_MAX != hotFieldOffset2) {
 				copyHotField(env, destinationObjectPtr, hotFieldOffset2);
-				U_8 hotFieldOffset3 = _extensions->objectModel.getHotFieldOffset3(forwardedHeader);
-				if (U_8_MAX != hotFieldOffset3) {
+				uint8_t hotFieldOffset3 = _extensions->objectModel.getHotFieldOffset3(forwardedHeader);
+				if (UINT8_MAX != hotFieldOffset3) {
 					copyHotField(env, destinationObjectPtr, hotFieldOffset3);
 				}
 			}
@@ -1699,9 +1699,9 @@ MM_Scavenger::depthCopyHotFields(MM_EnvironmentStandard *env, MM_ForwardedHeader
 }
 
 MMINLINE void
-MM_Scavenger::copyHotField(MM_EnvironmentStandard *env, omrobjectptr_t destinationObjectPtr, U_8 offset) {
+MM_Scavenger::copyHotField(MM_EnvironmentStandard *env, omrobjectptr_t destinationObjectPtr, uint8_t offset) {
 	GC_SlotObject hotFieldObject(_omrVM, (fomrobject_t*)(destinationObjectPtr + offset));
-	omrobjectptr_t objectPtr = hotFieldObject.readReferenceFromSlot();							
+	omrobjectptr_t objectPtr = hotFieldObject.readReferenceFromSlot();
 	if (isObjectInEvacuateMemory(objectPtr)) {
 		/* Hot field needs to be copy and forwarded.  Check if the work has already been done */
 		MM_ForwardedHeader forwardHeaderHotField(objectPtr, _extensions->compressObjectReferences());
