@@ -1682,13 +1682,13 @@ MM_Scavenger::depthCopyHotFields(MM_EnvironmentStandard *env, MM_ForwardedHeader
 	/* depth copy the hot fields of an object up to a depth specified by depthCopyMax */
 	if (env->_hotFieldCopyDepthCount < _extensions->depthCopyMax) {
 		uint8_t hotFieldOffset = _extensions->objectModel.getHotFieldOffset(forwardedHeader);
-		if (UINT8_MAX != hotFieldOffset) {
+		if (U_8_MAX != hotFieldOffset) {
 			copyHotField(env, destinationObjectPtr, hotFieldOffset);
 			uint8_t hotFieldOffset2 = _extensions->objectModel.getHotFieldOffset2(forwardedHeader);
-			if (UINT8_MAX != hotFieldOffset2) {
+			if (U_8_MAX != hotFieldOffset2) {
 				copyHotField(env, destinationObjectPtr, hotFieldOffset2);
 				uint8_t hotFieldOffset3 = _extensions->objectModel.getHotFieldOffset3(forwardedHeader);
-				if (UINT8_MAX != hotFieldOffset3) {
+				if (U_8_MAX != hotFieldOffset3) {
 					copyHotField(env, destinationObjectPtr, hotFieldOffset3);
 				}
 			}
