@@ -182,7 +182,7 @@ enum TR_CompilationOptions
    // Option word 3
    //
    TR_noJitUntilMain                      = 0x00000040 + 3,
-   TR_DisableMarkingOfHotFields           = 0x00000080 + 3,
+   // Available                           = 0x00000080 + 3,
    TR_DisableProfiling                    = 0x00000100 + 3,
    TR_Timing                              = 0x00000200 + 3,
    TR_SupportSwitchToInterpreter          = 0x00000400 + 3,
@@ -218,7 +218,7 @@ enum TR_CompilationOptions
    TR_EnableVPICForResolvedVirtualCalls   = 0x00000200 + 4,
    TR_DisableRegisterPressureSimulation   = 0x00000400 + 4,
    TR_DisableBlockVersioner               = 0x00000800 + 4,
-   TR_TraceMarkingOfHotFields             = 0x00001000 + 4,
+   TR_TraceDynamicBreadthFirstHotFields   = 0x00001000 + 4,
    TR_EnableAnnotations                   = 0x00002000 + 4, // change to disable when on by default
    TR_UnresolvedAreNotColdAtCold          = 0x00004000 + 4, // cold block marker marks unresolved blocks as cold at hotness cold or less
    TR_UseSymbolValidationManager          = 0x00008000 + 4,
