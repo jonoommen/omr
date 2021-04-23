@@ -472,6 +472,7 @@ MM_Configuration::initializeGCParameters(MM_EnvironmentBase* env)
 	if (0 == extensions->splitFreeListSplitAmount) {
 #if defined(OMR_GC_MODRON_SCAVENGER)
 		if (extensions->scavengerEnabled) {
+			extensions->gcCountBetweenHotFieldReset = 0;
 			extensions->splitFreeListSplitAmount = (extensions->gcThreadCount - 1) / 8  +  1;
 		} else
 #endif /* OMR_GC_MODRON_SCAVENGER */

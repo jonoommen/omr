@@ -1712,6 +1712,13 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 
 	/* outter if-forwarding-succeeded check */
 	if (originalDestinationObjectPtr == destinationObjectPtr) {
+		//if(((_extensions->scavengerStats._gcCount % 10) == 0) && (env->getEnvironmentId() == 2)){
+		if(((_extensions->scavengerStats._gcCount % 15) == 0)){
+			_extensions->gcCountBetweenHotFieldReset += 1;
+			if (_extensions->gcCountBetweenHotFieldReset == 5000) {
+				Assert_MM_unreachable();
+			}
+		}
 		/* Succeeded in forwarding the object [nonCS],
 		 * or we allow duplicate (did not even tried to forward yet) [CS].
 		 */
