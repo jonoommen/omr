@@ -306,7 +306,6 @@ public:
 	}
 #endif /* defined(OMR_GC_MODRON_SCAVENGER) */
 
-
 	/**
 	 * Calculate the actual object size and the size adjusted to object alignment. The calculated object size
 	 * includes any expansion bytes allocated if the object will grow when moved.
@@ -321,7 +320,6 @@ public:
 	{
 		_delegate.calculateObjectDetailsForCopy(env, forwardedHeader, objectCopySizeInBytes, objectReserveSizeInBytes);
 	}
-
 
 	/**
 	 * Set run-time object alignment and shift values in this object model and in the OMR VM struct. These
