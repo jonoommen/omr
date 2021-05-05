@@ -49,14 +49,6 @@ GC_ObjectModelDelegate::calculateObjectDetailsForCopy(MM_EnvironmentBase *env, M
 #endif /* defined(OMR_GC_MODRON_SCAVENGER) */
 
 void
-GC_ObjectModelDelegate::calculateObjectDetailsForCopy(MM_EnvironmentBase *env, MM_ForwardedHeader* forwardedHeader, uintptr_t *objectCopySizeInBytes, uintptr_t *objectReserveSizeInBytes, bool *doesObjectNeedHash)
-{
-	*objectCopySizeInBytes = 0;
-	*objectReserveSizeInBytes = 0;
-	*doesObjectNeedHash = false;
-}
-
-void
 GC_ObjectModelDelegate::calculateObjectDetailsForCopy(MM_EnvironmentBase *env, MM_ForwardedHeader* forwardedHeader, uintptr_t *objectCopySizeInBytes, uintptr_t *objectReserveSizeInBytes)
 {
 	*objectCopySizeInBytes = 0;
