@@ -1737,7 +1737,7 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			forwardedHeader->commenceFixup(destinationObjectPtr);
 
 			/* Object model specific fixup, like age */
-			_extensions->objectModel.fixupForwardedObject(forwardedHeader, destinationObjectPtr, objectAge);
+			_extensions->objectModel.fixupForwardedObject(forwardedHeader, destinationObjectPtr, objectAge, false);
 
 			/* Final fixup step - the object is available for usage by mutator threads */
 			forwardedHeader->commitFixup(destinationObjectPtr);
@@ -1749,7 +1749,7 @@ MM_Scavenger::copy(MM_EnvironmentStandard *env, MM_ForwardedHeader* forwardedHea
 			/* Copy the preserved fields from the forwarded header into the destination object */
 			forwardedHeader->fixupForwardedObject(destinationObjectPtr);
 
-			_extensions->objectModel.fixupForwardedObject(forwardedHeader, destinationObjectPtr, objectAge);
+			_extensions->objectModel.fixupForwardedObject(forwardedHeader, destinationObjectPtr, objectAge, false);
 		}
 
 #if defined(OMR_VALGRIND_MEMCHECK)
