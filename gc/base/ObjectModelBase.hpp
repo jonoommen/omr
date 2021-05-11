@@ -299,10 +299,10 @@ public:
 	 * @param[out] objectReserveSizeInBytes size adjusted to object alignment
 	 * @param[out] hotFieldAlignmentDescriptor pointer to hot field alignment descriptor for class (or NULL)
 	 */
-	MMINLINE void
+	MMINLINE bool
 	calculateObjectDetailsForCopy(MM_EnvironmentBase *env, MM_ForwardedHeader *forwardedHeader, uintptr_t *objectCopySizeInBytes, uintptr_t *objectReserveSizeInBytes, uintptr_t *hotFieldAlignmentDescriptor)
 	{
-		_delegate.calculateObjectDetailsForCopy(env, forwardedHeader, objectCopySizeInBytes, objectReserveSizeInBytes, hotFieldAlignmentDescriptor);
+		return _delegate.calculateObjectDetailsForCopy(env, forwardedHeader, objectCopySizeInBytes, objectReserveSizeInBytes, hotFieldAlignmentDescriptor);
 	}
 #endif /* defined(OMR_GC_MODRON_SCAVENGER) */
 
@@ -315,10 +315,10 @@ public:
 	 * @param[out] objectCopySizeInBytes actual object size
 	 * @param[out] objectReserveSizeInBytes size adjusted to object alignment
 	 */
-	MMINLINE void
+	MMINLINE bool
 	calculateObjectDetailsForCopy(MM_EnvironmentBase *env, MM_ForwardedHeader* forwardedHeader, uintptr_t *objectCopySizeInBytes, uintptr_t *objectReserveSizeInBytes)
 	{
-		_delegate.calculateObjectDetailsForCopy(env, forwardedHeader, objectCopySizeInBytes, objectReserveSizeInBytes);
+		return _delegate.calculateObjectDetailsForCopy(env, forwardedHeader, objectCopySizeInBytes, objectReserveSizeInBytes);
 	}
 
 	/**
